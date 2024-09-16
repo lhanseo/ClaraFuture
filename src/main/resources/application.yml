@@ -1,0 +1,44 @@
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/securitypractice
+    username: hanseo
+    password: 12340000
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate.dialect: org.hibernate.dialect.MySQL5Dialect
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: your-google-client-id
+            client-secret: your-google-client-secret
+            redirect-uri: "{baseUrl}/login/oauth2/code/google"
+            scope: profile, email
+          apple:
+            client-id: your-apple-client-id
+            client-secret: your-apple-client-secret
+            redirect-uri: "{baseUrl}/login/oauth2/code/apple"
+            scope: name, email
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+          apple:
+            authorization-uri: https://appleid.apple.com/auth/authorize
+            token-uri: https://appleid.apple.com/auth/token
+            user-info-uri: https://appleid.apple.com/auth/keys
+            user-name-attribute: sub
+
+jwt:
+  secret: your-jwt-secret
+  expiration: 3600
