@@ -3,7 +3,6 @@ package com.clara.ClaraFuture.controller;
 import com.clara.ClaraFuture.service.JwtService;
 import com.clara.ClaraFuture.service.ParentService;
 import com.clara.ClaraFuture.entity.Parent;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -14,33 +13,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/oauth2")
 public class OAuth2LoginController {
 
-    @Autowired
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
-    @Autowired
-    private ParentService parentService;
+    private final ParentService parentService;
 
-    // OAuth2 로그인 요청 처리 및 JWT 발급
-    @GetMapping("/authorization/{provider}")
-    public ResponseEntity<?> oauth2Login(@PathVariable String provider, Authentication authentication) {
-        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-        String email = oAuth2User.getAttribute("email");
-
-        // 부모 정보 확인 또는 생성
-        Parent parent = parentService.getParentByEmail(email);
-        if (parent == null) {
-            parent = new Parent();
-            parent.setParentName(oAuth2User.getAttribute("name"));
-            parent.setEmail(email);
-            parentService.createParent(parent);
-        }
-
-        // JWT와 리프레시 토큰 생성
-        String accessToken = jwtService.createToken(parent.getEmail());
-        String refreshToken = jwtService.createRefreshToken(parent.getEmail());
-
-        // JWT와 리프레시 토큰을 ResponseEntity로 반환
-        return ResponseEntity.ok().body(new TokenResponse(accessToken, refreshToken));
+    public OAuth2LoginController(JwtService jwtService, ParentService parentService) {
+        this.jwtService = jwtService;
+        this.parentService = parentService;
     }
 
     // 리프레시 토큰을 사용한 새로운 액세스 토큰 발급
@@ -50,7 +29,7 @@ public class OAuth2LoginController {
 
         if (jwtService.validateRefreshToken(refreshToken)) {
             String email = jwtService.getEmailFromRefreshToken(refreshToken);
-            String newAccessToken = jwtService.createToken(email);
+            String newAccessToken = jwtService.createAccessToken(email);
             String newRefreshToken = jwtService.createRefreshToken(email);
 
             // 새로 발급된 JWT와 리프레시 토큰을 ResponseEntity로 반환

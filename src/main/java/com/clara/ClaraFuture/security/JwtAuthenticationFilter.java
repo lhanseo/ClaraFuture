@@ -1,59 +1,68 @@
 package com.clara.ClaraFuture.security;
 
-import com.clara.ClaraFuture.util.JwtUtil;
+import com.clara.ClaraFuture.exception.InvalidJwtTokenException;
+import com.clara.ClaraFuture.service.JwtService;
+import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Collections;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private final JwtService jwtService;
+
     @Autowired
-    private JwtUtil jwtUtil;
-
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
-        jwtUtil = this.jwtUtil;
+    public JwtAuthenticationFilter(JwtService jwtService) {
+        this.jwtService = jwtService;
     }
 
-    // JWT 요청에서 추출하는 메서드
-    private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
-    }
-
-
-    // 필터 로직
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        // 1. 요청에서 JWT 추출
-        String token = getJwtFromRequest(request);
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
-        // 2. JWT가 유효하다면 인증 처리
-        if (token != null && jwtUtil.validateToken(token)) {
-            String username = jwtUtil.getEmail(token);
+        // 헤더에서 JWT 토큰 추출
+        String authorizationHeader = request.getHeader("Authorization");
 
-            // 3. 인증 객체 생성 및 SecurityContext에 설정
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(username, null, Collections.emptyList());
+        String token = null;
+        String email = null;
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        // 토큰이 존재하고 "Bearer "로 시작하는지 확인
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+            try {
+                if (jwtService.validateToken(token)) {
+                    email = jwtService.getEmailFromToken(token);
+                }
+            } catch (InvalidJwtTokenException e) {
+                // 토큰 파싱 중 예외 발생 시 처리 (로그 기록 등)
+                logger.error("Invalid JWT token: {}", e);
+            }
         }
 
-        // 4. 필터 체인 실행
+        // 이메일이 존재하고, 이미 인증 정보가 설정되지 않은 경우
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            // 사용자 정보를 가져오는 로직 (필요에 따라 구현)
+            // 여기서는 간단히 이메일만으로 인증 객체를 생성합니다.
+            UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(email, null, null);
+
+            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            // 인증 컨텍스트에 설정
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        }
+
+        // 다음 필터로 이동
         filterChain.doFilter(request, response);
     }
 }

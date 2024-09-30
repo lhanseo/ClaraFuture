@@ -24,6 +24,10 @@ public class Parent {
     @Column(nullable = false, length = 100)
     private String parentName;
 
+    @OneToMany
+    @JoinColumn(name = "childId", nullable = true)
+    private String childId;
+
     @Column(nullable = false, length = 100)
     private String email;
 

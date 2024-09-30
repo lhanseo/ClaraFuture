@@ -18,14 +18,14 @@ spring:
       client:
         registration:
           google:
-            client-id: your-google-client-id
-            client-secret: your-google-client-secret
-            redirect-uri: "{baseUrl}/login/oauth2/code/google"
+            client-id:
+            client-secret:
+            redirect-uri:
             scope: profile, email
           apple:
-            client-id: your-apple-client-id
-            client-secret: your-apple-client-secret
-            redirect-uri: "{baseUrl}/login/oauth2/code/apple"
+            client-id:
+            client-secret:
+            redirect-uri:
             scope: name, email
         provider:
           google:
@@ -41,4 +41,3 @@ spring:
 
 jwt:
   secret: your-jwt-secret
-  expiration: 3600

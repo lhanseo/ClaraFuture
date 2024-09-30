@@ -17,6 +17,12 @@ public class OAuthInfo {
     @JoinColumn(name = "userId", nullable = false)
     private Parent parent;
 
+    @Column(name = "roles", nullable = true, length = 50)
+    private String roles;
+
+    @Column(nullable = false, unique = true, length = 255)
+    private String email;
+
     @Column(nullable = false, length = 50)
     private String provider;
 

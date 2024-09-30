@@ -20,29 +20,8 @@ public class OAuthService {
     private ParentRepository parentRepository;
 
     // OAuth 사용자 정보 저장
-    public OAuthInfo saveOAuthUser(String provider, String providerId, String email) {
-        // 이메일로 부모를 찾음
-        Optional<Parent> optionalParent = Optional.ofNullable(parentRepository.findByEmail(email));
-        Parent parent;
-
-        if (optionalParent.isPresent()) {
-            parent = optionalParent.get();
-        } else {
-            // 새로운 부모 생성
-            parent = new Parent();
-            parent.setEmail(email);
-            parent.setParentName(email.split("@")[0]); // 기본값으로 이메일에서 이름 추출
-            parent.setPasswordHash(""); // 소셜 로그인 시 비밀번호가 필요하지 않으므로 빈 값으로 설정
-            parent.setUniqueCode(generateUniqueCode());
-            parentRepository.save(parent);
-        }
-
-        // OAuth 정보 저장
-        OAuthInfo oauthInfo = new OAuthInfo();
-        oauthInfo.setParent(parent);
-        oauthInfo.setProvider(provider);
-        oauthInfo.setProviderId(providerId);
-        return oauthInfoRepository.save(oauthInfo);
+    public OAuthInfo saveOAuthInfo(OAuthInfo oAuthInfo) {
+        return oauthInfoRepository.save(oAuthInfo);
     }
 
     // 고유 코드 생성 로직
@@ -64,7 +43,7 @@ public class OAuthService {
     }
 
     // 부모 이메일로 OAuth 정보 찾기
-    public Optional<OAuthInfo> findByEmail(String email) {
-        return oauthInfoRepository.findByEmailAndProvider(email, "google"); // 기본으로 Google 사용
+    public Optional<OAuthInfo> getOAuthInfoByEmail(String email) {
+        return oauthInfoRepository.findByEmail(email);
     }
 }

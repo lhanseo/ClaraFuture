@@ -30,9 +30,7 @@ public class MissionController {
     @PatchMapping("/update/{missionId}")
     public ResponseEntity<Mission> patchMission(@PathVariable Long missionId, @RequestBody Map<String, Object> updates) {
         Mission updatedMission = missionService.patchMission(missionId, updates);
-        if (updatedMission == null) {
-            throw new MissionNotFoundException("미션을 찾을 수 없습니다. ID: " + missionId);
-        }
+
         return ResponseEntity.ok(updatedMission);
     }
 
